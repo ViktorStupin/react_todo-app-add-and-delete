@@ -7,6 +7,7 @@ import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { ErrorNotification } from './components/ErrorNotification';
 import { TodoItem } from './components/TodoItem';
+import { ErrorMessage } from './types/ErrorMassage';
 
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -15,12 +16,12 @@ export const App: React.FC = () => {
 
   const [tempTodo, setTempTodo] = useState<Todo | null>(null);
 
-  const [error, setError] = useState('');
+  const [error, setError] = useState<ErrorMessage | ''>('');
   const errorTimerId = useRef(0);
 
   const mainInput = useRef<HTMLInputElement>(null);
 
-  const showError = (errorMsg: string) => {
+  const showError = (errorMsg: ErrorMessage) => {
     if (errorTimerId.current) {
       window.clearTimeout(errorTimerId.current);
     }
@@ -50,7 +51,7 @@ export const App: React.FC = () => {
 
         setTodos(data);
       } catch {
-        showError('Unable to load todos');
+        showError(ErrorMessage.UnableToLoad);
       }
     };
 
@@ -77,7 +78,7 @@ export const App: React.FC = () => {
 
       return true;
     } catch {
-      showError('Unable to add a todo');
+      showError(ErrorMessage.UnableToAdd);
 
       return false;
     } finally {
@@ -92,7 +93,7 @@ export const App: React.FC = () => {
       setTodos(currentTodos => currentTodos.filter(todo => todo.id !== todoId));
       mainInput.current?.focus();
     } catch {
-      showError('Unable to delete a todo');
+      showError(ErrorMessage.UnableToDelete);
     } finally {
       setDeletingIds(currentIds => {
         const next = new Set(currentIds);
@@ -104,8 +105,14 @@ export const App: React.FC = () => {
     }
   };
 
-  const clearCompleted = () => {
-    todos.filter(todo => todo.completed).forEach(todo => deleteTodo(todo.id));
+  const clearCompleted = async () => {
+    const completedTodos = todos.filter(todo => todo.completed);
+
+    try {
+      await Promise.all(completedTodos.map(todo => deleteTodo(todo.id)));
+    } catch {
+      showError(ErrorMessage.UnableToDelete);
+    }
   };
 
   const filteredTodos = todos.filter(todo => {
@@ -130,7 +137,7 @@ export const App: React.FC = () => {
           todos={todos}
           inputRef={mainInput}
           onSubmit={addTodo}
-          onError={showError}
+          onError={(msg: string) => showError(msg as ErrorMessage)}
         />
 
         <TodoList
