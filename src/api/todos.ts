@@ -1,56 +1,20 @@
 import { Todo } from '../types/Todo';
+import { client } from '../utils/fetchClient';
 
-export const USER_ID = 1; // ⚠️ заміни на свій userId
+export const USER_ID = 3519;
 
-const API_URL = 'https://mate.academy/students-api/todos';
-
-export const getTodos = async (): Promise<Todo[]> => {
-  const response = await fetch(`${API_URL}?userId=${USER_ID}`);
-
-  if (!response.ok) {
-    throw new Error('Unable to load todos');
-  }
-
-  return response.json();
+export const getTodos = () => {
+  return client.get<Todo[]>(`/todos?userId=${USER_ID}`);
 };
 
-export const createTodo = async (todo: Omit<Todo, 'id'>): Promise<Todo> => {
-  const response = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(todo),
+export const addTodo = (title: string) => {
+  return client.post<Todo>('/todos', {
+    userId: USER_ID,
+    title: title.trim(),
+    completed: false,
   });
-
-  if (!response.ok) {
-    throw new Error('Unable to add a todo');
-  }
-
-  return response.json();
 };
 
-export const deleteTodo = async (id: number): Promise<void> => {
-  const response = await fetch(`${API_URL}/${id}`, {
-    method: 'DELETE',
-  });
-
-  if (!response.ok) {
-    throw new Error('Unable to delete a todo');
-  }
-};
-
-export const updateTodo = async (
-  id: number,
-  data: Partial<Todo>,
-): Promise<Todo> => {
-  const response = await fetch(`${API_URL}/${id}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    throw new Error('Unable to update a todo');
-  }
-
-  return response.json();
+export const deleteTodo = (todoId: number) => {
+  return client.delete(`/todos/${todoId}`);
 };

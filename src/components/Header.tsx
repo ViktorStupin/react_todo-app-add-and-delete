@@ -1,36 +1,78 @@
-import React from 'react';
+import classNames from 'classnames';
+import React, { useEffect, useState } from 'react';
 
-interface HeaderProps {
-  todosCount: number;
-  isAllCompleted: boolean;
-  newTodoTitle: string;
-  newTodoInputRef: React.RefObject<HTMLInputElement>;
-  isInputDisabled: boolean;
-  onAddTodo: (event: React.FormEvent) => void;
-  onToggleAll: () => void;
-  setNewTodoTitle: (title: string) => void;
-}
+import { Todo } from '../types/Todo';
 
-export const Header: React.FC<HeaderProps> = ({
-  newTodoTitle,
-  newTodoInputRef,
-  isInputDisabled,
-  onAddTodo,
-  setNewTodoTitle,
+type Props = {
+  todos: Todo[];
+  inputRef: React.RefObject<HTMLInputElement>;
+  onSubmit: (title: string) => Promise<boolean>;
+  onError: (msg: string) => void;
+};
+
+export const Header: React.FC<Props> = ({
+  todos,
+  inputRef,
+  onSubmit,
+  onError,
 }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [title, setTitle] = useState('');
+
+  useEffect(() => {
+    if (!isSubmitting) {
+      inputRef.current?.focus();
+    }
+  }, [inputRef, isSubmitting]);
+
+  const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setTitle(event.target.value);
+  };
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    if (!title.trim()) {
+      onError('Title should not be empty');
+      inputRef.current?.focus();
+
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const success = await onSubmit(title);
+
+      if (success) {
+        setTitle('');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <header className="todoapp__header">
-      <form onSubmit={onAddTodo}>
+      {todos.length > 0 && (
+        <button
+          type="button"
+          className={classNames('todoapp__toggle-all', {
+            active: todos.every(todo => todo.completed),
+          })}
+          data-cy="ToggleAllButton"
+        />
+      )}
+
+      <form onSubmit={handleSubmit}>
         <input
           data-cy="NewTodoField"
           type="text"
           className="todoapp__new-todo"
           placeholder="What needs to be done?"
-          value={newTodoTitle}
-          onChange={e => setNewTodoTitle(e.target.value)}
-          ref={newTodoInputRef}
-          disabled={isInputDisabled}
-          autoFocus
+          ref={inputRef}
+          value={title}
+          onChange={event => handleTitleChange(event)}
+          disabled={isSubmitting}
         />
       </form>
     </header>
