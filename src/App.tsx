@@ -12,7 +12,7 @@ import { ErrorMessage } from './types/ErrorMassage';
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [filterBy, setFilterBy] = useState<FilterStatus>(FILTER.ALL);
-  const [deletingIds, setDeletingIds] = useState<Set<number>>(new Set());
+  const [deletingIds, setDeletingIds] = useState<number[]>([]);
 
   const [tempTodo, setTempTodo] = useState<Todo | null>(null);
 
@@ -44,7 +44,6 @@ export const App: React.FC = () => {
   };
 
   useEffect(() => {
-    setError('');
     const fetchTodos = async () => {
       try {
         const data = await todoManager.getTodos();
@@ -87,7 +86,7 @@ export const App: React.FC = () => {
   };
 
   const deleteTodo = async (todoId: number) => {
-    setDeletingIds(currentIds => new Set(currentIds).add(todoId));
+    setDeletingIds(currentIds => [...currentIds, todoId]);
     try {
       await todoManager.deleteTodo(todoId);
       setTodos(currentTodos => currentTodos.filter(todo => todo.id !== todoId));
@@ -95,13 +94,7 @@ export const App: React.FC = () => {
     } catch {
       showError(ErrorMessage.UnableToDelete);
     } finally {
-      setDeletingIds(currentIds => {
-        const next = new Set(currentIds);
-
-        next.delete(todoId);
-
-        return next;
-      });
+      setDeletingIds(currentIds => currentIds.filter(id => id !== todoId));
     }
   };
 
@@ -117,8 +110,6 @@ export const App: React.FC = () => {
 
   const filteredTodos = todos.filter(todo => {
     switch (filterBy) {
-      case FILTER.ALL:
-        return true;
       case FILTER.COMPLETED:
         return todo.completed;
       case FILTER.ACTIVE:

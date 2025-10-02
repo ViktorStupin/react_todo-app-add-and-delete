@@ -17,45 +17,30 @@ export const Footer: React.FC<Props> = ({
   onFilterChange,
   onClearCompleted,
 }) => {
+  const activeCount = todos.filter(todo => !todo.completed).length;
+
   return (
     <footer className="todoapp__footer" data-cy="Footer">
       <span className="todo-count" data-cy="TodosCounter">
-        {todos.filter(todo => !todo.completed).length} items left
+        {activeCount} items left
       </span>
+
       <nav className="filter" data-cy="Filter">
-        <a
-          href="#/"
-          className={classNames('filter__link', {
-            selected: filterBy === FILTER.ALL,
-          })}
-          data-cy="FilterLinkAll"
-          onClick={() => onFilterChange(FILTER.ALL)}
-        >
-          All
-        </a>
-
-        <a
-          href="#/active"
-          className={classNames('filter__link', {
-            selected: filterBy === FILTER.ACTIVE,
-          })}
-          data-cy="FilterLinkActive"
-          onClick={() => onFilterChange(FILTER.ACTIVE)}
-        >
-          Active
-        </a>
-
-        <a
-          href="#/completed"
-          className={classNames('filter__link', {
-            selected: filterBy === FILTER.COMPLETED,
-          })}
-          data-cy="FilterLinkCompleted"
-          onClick={() => onFilterChange(FILTER.COMPLETED)}
-        >
-          Completed
-        </a>
+        {Object.values(FILTER).map(option => (
+          <a
+            key={option}
+            href={`#/${option === FILTER.ALL ? '' : option}`}
+            className={classNames('filter__link', {
+              selected: filterBy === option,
+            })}
+            data-cy={`FilterLink${option[0].toUpperCase() + option.slice(1)}`}
+            onClick={() => onFilterChange(option)}
+          >
+            {option.charAt(0).toUpperCase() + option.slice(1)}
+          </a>
+        ))}
       </nav>
+
       <button
         type="button"
         className="todoapp__clear-completed"

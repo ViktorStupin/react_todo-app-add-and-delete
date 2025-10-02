@@ -1,7 +1,7 @@
-export const FILTER = {
-  ALL: 'all',
-  ACTIVE: 'active',
-  COMPLETED: 'completed',
-} as const;
+export enum FILTER {
+  ALL = 'all',
+  ACTIVE = 'active',
+  COMPLETED = 'completed',
+}
 
-export type FilterStatus = (typeof FILTER)[keyof typeof FILTER];
+export type FilterStatus = FILTER.ALL | FILTER.ACTIVE | FILTER.COMPLETED;
