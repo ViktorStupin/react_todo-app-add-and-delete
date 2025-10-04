@@ -12,7 +12,7 @@ import { ErrorMessage } from './types/ErrorMassage';
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [filterBy, setFilterBy] = useState<FilterStatus>(FILTER.ALL);
-  const [deletingIds, setDeletingIds] = useState<number[]>([]);
+  const [deletingIds, setDeletingIds] = useState<Set<number>>(new Set());
 
   const [tempTodo, setTempTodo] = useState<Todo | null>(null);
 
@@ -86,7 +86,7 @@ export const App: React.FC = () => {
   };
 
   const deleteTodo = async (todoId: number) => {
-    setDeletingIds(currentIds => [...currentIds, todoId]);
+    setDeletingIds(currentIds => new Set([...currentIds, todoId]));
     try {
       await todoManager.deleteTodo(todoId);
       setTodos(currentTodos => currentTodos.filter(todo => todo.id !== todoId));
@@ -94,7 +94,13 @@ export const App: React.FC = () => {
     } catch {
       showError(ErrorMessage.UnableToDelete);
     } finally {
-      setDeletingIds(currentIds => currentIds.filter(id => id !== todoId));
+      setDeletingIds(currentIds => {
+        const newIds = new Set(currentIds);
+
+        newIds.delete(todoId);
+
+        return newIds;
+      });
     }
   };
 
